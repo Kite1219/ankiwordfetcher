@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionary Word Lookup Tool</title>
+  <style>
+    /* ─── Modern Dark UI Theme ─── */
+    :root {
+      --bg: #121214;
+      --surface: #1e1e20;
+      --surface-hover: #26262a;
+      --surface-alt: #232327;
+      --text: #f5f5f7;
+      --text-secondary: #c7c7c9;
+      --muted: #a0a0a5;
+      --accent: #10a37f;
+      --accent-light: #15c499;
+      --accent-dark: #0d8c6c;
+      --border: #38383c;
+      --success: #4cb782;
+      --error: #e45356;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 16px;
+      padding-bottom: 50px;
+    }
+
+    .wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 24px;
+    }
+
+    /* -------- Header -------- */
+    .app-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .app-header p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* -------- Card UI -------- */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 12px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* -------- Input Area -------- */
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      resize: vertical;
+      font-size: 1rem;
+      line-height: 1.5;
+      transition: all 0.15s ease;
+      margin: 6px 0;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+    }
+
+    .help-text {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* -------- Enhanced Slider -------- */
+    .slider-container {
+      margin-top: 24px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .slider-label {
+      font-weight: 500;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .slider-value {
+      background: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .slider-track {
+      position: relative;
+      height: 8px;
+      width: 100%;
+      background: var(--border);
+      border-radius: 4px;
+      margin: 12px 0;
+    }
+
+    .slider-track input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: transparent;
+      margin: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+    }
+
+    .slider-track-fill {
+      position: absolute;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 4px;
+      z-index: 1;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]:hover::-webkit-slider-thumb {
+      transform: scale(1.1);
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+      background: var(--accent-light);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: white;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]:hover::-moz-range-thumb {
+      transform: scale(1.1);
+    }
+
+    input[type="range"]:active::-moz-range-thumb {
+      transform: scale(1.2);
+      background: var(--accent-light);
+    }
+
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding: 0 12px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* -------- Button -------- */
+    .btn-container {
+      margin-top: 32px;
+      text-align: center;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 14px 32px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(16, 163, 127, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 163, 127, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 4px rgba(16, 163, 127, 0.3);
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-alt);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 12px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--muted);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(1px);
+    }
+
+    /* -------- Progress -------- */
+    .progress-container {
+      margin-top: 32px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.2s linear;
+    }
+
+    #status {
+      margin-top: 14px;
+      font-size: 1rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* -------- Results Area -------- */
+    .results-area {
+      margin-top: 32px;
+      display: flex;
+      gap: 24px;
+    }
+
+    .results-column {
+      flex: 1;
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .column-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .column-title-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .column-title-icon.success {
+      background: rgba(76, 183, 130, 0.2);
+      color: var(--success);
+    }
+
+    .column-title-icon.error {
+      background: rgba(228, 83, 86, 0.2);
+      color: var(--error);
+    }
+
+    .success-list,
+    .fail-list {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+
+    .success-item,
+    .fail-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .success-item:last-child,
+    .fail-item:last-child {
+      border-bottom: none;
+    }
+
+    .success-word,
+    .fail-word {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+
+    .success-pos {
+      font-size: 0.9rem;
+      color: var(--accent);
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    .success-def {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .fail-word {
+      color: var(--accent);
+      text-decoration: none;
+      flex-grow: 1;
+    }
+
+    .fail-word:hover {
+      text-decoration: underline;
+    }
+
+    .fail-remove {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      margin-left: 12px;
+    }
+
+    .fail-remove:hover {
+      color: var(--error);
+    }
+
+    .empty-list {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="app-header">
+      <h1>Dictionary Word Lookup Tool</h1>
+      <p>Enter words for dictionary lookup and download as a spreadsheet file</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </div>
+        <div class="card-title">Word Input</div>
+      </div>
+
+      <textarea id="input" placeholder="steeper&#10;home plate&#10;shallow"></textarea>
+      <p class="help-text">
+        Add word type hints with <code>(n)</code>, <code>(v)</code>,
+        <code>(adj)</code>, or <code>(adv)</code> after the word.
+      </p>
+
+      <div class="slider-container">
+        <div class="slider-header">
+          <div class="slider-label">Search Delay</div>
+          <div class="slider-value" id="delayVal">400 ms</div>
+        </div>
+        <div class="slider-track">
+          <div class="slider-track-fill" id="track-fill"></div>
+          <input id="delay" type="range" min="100" max="2000" step="50" value="400">
+        </div>
+        <div class="slider-ticks">
+          <span>Faster (may get blocked)</span>
+          <span>Balanced</span>
+          <span>Slower (more reliable)</span>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <button id="run" class="btn-primary">Lookup Words & Download</button>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress"><div id="bar" class="progress-bar"></div></div>
+      <div id="status"></div>
+    </div>
+
+    <div class="results-area">
+      <div class="results-column">
+        <div class="column-header">
+          <div class="column-title">
+            <div class="column-title-icon success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>
+            </div>
+            Successfully Looked Up <span id="success-count">(0)</span>
+          </div>
+          <button id="clear-success" class="btn-secondary">Clear History</button>
+        </div>
+        <div id="success-list" class="success-list">
+          <div class="empty-list">No words have been looked up yet</div>
+        </div>
+      </div>
+
+      <div class="results-column">
+        <div class="column-header">
+          <div class="column-title">
+            <div class="column-title-icon error">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </div>
+            Not Found
+          </div>
+          <div>
+            <button id="retry-fails" class="btn-secondary">Retry All</button>
+            <button id="clear-fails" class="btn-secondary">Clear History</button>
+          </div>
+        </div>
+        <div id="fail-list" class="fail-list">
+          <div class="empty-list">Great! No missing words</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ───────── SLIDER ─────────
+    const slider = document.getElementById('delay');
+    const delayVal = document.getElementById('delayVal');
+    const trackFill = document.getElementById('track-fill');
+    function updateSlider() {
+      const min = +slider.min, max = +slider.max, val = +slider.value;
+      trackFill.style.width = ((val - min) / (max - min) * 100) + '%';
+      delayVal.textContent = val + ' ms';
+    }
+    slider.addEventListener('input', updateSlider);
+    updateSlider();
+
+    // ───────── LOCAL STORAGE ARRAYS ─────────
+    let successfulLookups = [], notFoundWords = [];
+    function loadStored() {
+      try {
+        successfulLookups = JSON.parse(localStorage.getItem('dictionaryLookups') || '[]');
+      } catch {
+        successfulLookups = [];
+        localStorage.removeItem('dictionaryLookups');
+      }
+      try {
+        notFoundWords = JSON.parse(localStorage.getItem('dictionaryNotFound') || '[]');
+      } catch {
+        notFoundWords = [];
+        localStorage.removeItem('dictionaryNotFound');
+      }
+    }
+    function saveSuccess() {
+      localStorage.setItem('dictionaryLookups', JSON.stringify(successfulLookups));
+    }
+    function saveFails() {
+      localStorage.setItem('dictionaryNotFound', JSON.stringify(notFoundWords));
+    }
+
+    // ───────── UI UPDATE FUNCTIONS ─────────
+    const successList = document.getElementById('success-list');
+    const successCount = document.getElementById('success-count');
+    const failList = document.getElementById('fail-list');
+
+    function updateSuccessList() {
+      successCount.textContent = `(${successfulLookups.length})`;
+      if (!successfulLookups.length) {
+        successList.innerHTML = '<div class="empty-list">No words have been looked up yet</div>';
+        return;
+      }
+      successList.innerHTML = successfulLookups.map(it => `
+        <div class="success-item">
+          <div>
+            <div class="success-word">${it.word}</div>
+            <div class="success-pos">${it.pos || 'Unknown'}</div>
+            <div class="success-def">${it.firstDef}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateFailList() {
+      if (!notFoundWords.length) {
+        failList.innerHTML = '<div class="empty-list">Great! No missing words</div>';
+        return;
+      }
+      failList.innerHTML = notFoundWords.map(w => `
+        <div class="fail-item">
+          <a href="https://www.oxfordlearnersdictionaries.com/search/english/?q=${encodeURIComponent(w)}"
+             target="_blank" class="fail-word">${w}</a>
+          <button class="fail-remove" data-word="${w}">×</button>
+        </div>
+      `).join('');
+    }
+
+    // ───────── ON LOAD ─────────
+    loadStored();
+    updateSuccessList();
+    updateFailList();
+
+    // ───────── REMOVE SINGLE FAIL ─────────
+    failList.addEventListener('click', e => {
+      if (e.target.classList.contains('fail-remove')) {
+        const w = e.target.getAttribute('data-word');
+        notFoundWords = notFoundWords.filter(x => x !== w);
+        saveFails();
+        updateFailList();
+      }
+    });
+
+    // ───────── CLEAR BUTTONS ─────────
+    document.getElementById('clear-success').onclick = () => {
+      successfulLookups = [];
+      saveSuccess();
+      updateSuccessList();
+    };
+    document.getElementById('clear-fails').onclick = () => {
+      notFoundWords = [];
+      saveFails();
+      updateFailList();
+    };
+
+    // ───────── RETRY FAILS ─────────
+    document.getElementById('retry-fails').onclick = () => {
+      if (!notFoundWords.length) return;
+      document.getElementById('input').value = notFoundWords.join('\n');
+      document.getElementById('run').click();
+    };
+
+    // ───────── HELPERS & SCRAPER (unchanged) ─────────
+    const proxy = u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const qs = (s, c = document) => c.querySelector(s);
+    const qsa = (s, c = document) => [...c.querySelectorAll(s)];
+    const txt = e => e ? e.textContent.trim() : '';
+    const bullet = '\u2022 ';
+    const posMap = { n: 'noun', v: 'verb', adj: 'adjective', adv: 'adverb' };
+    const singular = w => w.replace(/ies$/, 'y').replace(/s$/, '');
+    function parseLine(l) {
+      const m = l.match(/^(.*?)(?:\s*\((n|v|adj|adv)\))?$/i);
+      return { base: m[1].trim(), hint: m[2]?.toLowerCase() || '' };
+    }
+    function scrape(doc) {
+      const head = txt(qs('.webtop-g h2 .hw', doc)
+        || qs('.webtop-g h2', doc)
+        || qs('#entryContent h1', doc)
+        || qs('h1', doc));
+      const extras = [];
+      const header = qs('.webtop-g', doc) || qs('.webtop', doc);
+      if (header) {
+        const text = header.innerText.replace(/\s+/g, ' ');
+        (text.match(/\([^)]*\)/g) || []).forEach(t => {
+          if (!/^\(\/.*\/\)$/.test(t) && !/^\(\d/.test(t))
+            extras.push(t);
+        });
+      }
+      qsa('#entryContent > p', doc).forEach(p => {
+        const t = txt(p);
+        if (/^\(.*\)$/.test(t)) extras.push(t);
+      });
+      const extra = [...new Set(extras)].join('<br>');
+      const senses = [];
+      qsa('#entryContent li.sense', doc).forEach((li, i) => {
+        const defEl = qs('span.def', li);
+        if (!defEl) return;
+        let html = '';
+        const lbl = txt(qs('span.registerlabel, span.grammar, span.label, span.labels', li));
+        if (lbl) html += `<i>${lbl}</i><br>`;
+        html += `${i+1}. ${txt(defEl)}`;
+        const syn = txt(qs('span.syn', li));
+        if (syn) html += `<br><b>Synonym:</b> ${syn}`;
+        const exs = qsa('span.x', li).map(x => txt(x));
+        if (exs.length) html += '<br>' + exs.map(e => bullet + e).join('<br>');
+        senses.push(html);
+      });
+      if (!senses.length) return null;
+      return {
+        head,
+        extra,
+        senses,
+        pos: txt(qs('span.pos', doc)),
+        phon: txt(qs('span.phon', doc))
+      };
+    }
+    async function fetchPage(slug) {
+      try {
+        const h = await (await fetch(proxy(
+          `https://www.oxfordlearnersdictionaries.com/definition/english/${slug}`
+        ))).text();
+        return scrape(new DOMParser()
+          .parseFromString(h, 'text/html'));
+      } catch {
+        return null;
+      }
+    }
+    async function fetchSearch(w) {
+      try {
+        const url = `https://www.oxfordlearnersdictionaries.com/search/english/?q=${encodeURIComponent(w)}`;
+        const h = await (await fetch(proxy(url))).text();
+        const doc = new DOMParser().parseFromString(h, 'text/html');
+        let r = scrape(doc);
+        if (r) return r;
+        const link = qs('.result-list a', doc)?.href
+          || qs('a[href*="/definition/english/"]', doc)?.href;
+        if (!link) return null;
+        const m = link.match(/\/definition\/english\/([^\/?#]+)/);
+        if (!m) return null;
+        return await fetchPage(m[1]);
+      } catch {
+        return null;
+      }
+    }
+    async function fetchOxford(w, h) {
+      if (h) {
+        for (let i = 1; i <= 8; i++) {
+          const d = await fetchPage(`${w}_${i}`);
+          if (d && d.pos.toLowerCase().startsWith(posMap[h])) return d;
+        }
+      }
+      return await fetchPage(w) || await fetchSearch(w);
+    }
+    async function lookup(o) {
+      let d = await fetchOxford(o.base, o.hint);
+      if (d) return { word: d.head || o.base, ...d };
+      if (o.base.endsWith('s')) {
+        d = await fetchOxford(singular(o.base), o.hint);
+        if (d) return { word: d.head, ...d };
+      }
+      return { word: o.base, senses: ['[Not found]'], pos: '', phon: '', extra: '', failed: true };
+    }
+
+    // ───────── MAIN RUN BUTTON ─────────
+    const runBtn = qs('#run'), bar = qs('#bar'), status = qs('#status');
+    runBtn.onclick = async () => {
+      const lines = qs('#input').value
+        .split('\n').map(s => s.trim())
+        .filter(Boolean).map(parseLine);
+      if (!lines.length) return alert('Enter words first');
+
+      // reset fails for this run
+      notFoundWords = [];
+      let rows = [], bad = [];
+      const delay = Math.max(100, +slider.value);
+
+      for (let i = 0; i < lines.length; i++) {
+        status.textContent = `Processing "${lines[i].base}" (${i+1}/${lines.length})`;
+        bar.style.width = `${(i+1)/lines.length*100}%`;
+        const d = await lookup(lines[i]);
+
+        if (d.failed) {
+          bad.push(lines[i].base);
+        } else {
+          let html = '';
+          if (d.extra) html += `<i>${d.extra}</i><br>`;
+          html += d.senses.join('<br><br>');
+          rows.push(`${d.word}\t${html.replace(/\t/g,' ')}\t${d.pos}\t${d.phon}`);
+
+          // update success list
+          const firstDef = d.senses[0]
+            .replace(/<[^>]*>/g, '')
+            .replace(/^\d+\.\s*/, '')
+            .split('<br>')[0];
+          const idx = successfulLookups.findIndex(x => x.word === d.word);
+          if (idx >= 0) successfulLookups.splice(idx, 1);
+          successfulLookups.unshift({ word: d.word, pos: d.pos, firstDef });
+          if (successfulLookups.length > 50) {
+            successfulLookups = successfulLookups.slice(0, 50);
+          }
+        }
+
+        await sleep(delay);
+      }
+
+      // record not founds
+      bad.forEach(w => {
+        if (!notFoundWords.includes(w)) notFoundWords.push(w);
+      });
+
+      // save & refresh UI
+      saveSuccess();
+      saveFails();
+      updateSuccessList();
+      updateFailList();
+
+      // download TSV
+      if (rows.length) {
+        const blob = new Blob([rows.join('\n')], { type: 'text/tab-separated-values' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'dictionary_words.tsv';
+        a.click();
+      }
+
+      status.textContent = 'Finished!';
+      setTimeout(() => {
+        bar.style.width = '0';
+        status.textContent = '';
+      }, 3000);
+    };
+  </script>
+</body>
+</html>
