@@ -392,11 +392,16 @@
       border-bottom: none;
     }
 
-    .success-word,
-    .fail-word {
+    .success-word {
       font-weight: 600;
       font-size: 1.05rem;
       margin-bottom: 4px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .success-word:hover {
+      text-decoration: underline;
     }
 
     .success-pos {
@@ -455,8 +460,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            <path d="M2 3h6a4 0 0 1 4 4v14a3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 0 0 0-4 4v14a3 0 0 1 3-3h7z"></path>
           </svg>
         </div>
         <div class="card-title">Word Input</div>
@@ -589,7 +594,7 @@
       successList.innerHTML = successfulLookups.map(it => `
         <div class="success-item">
           <div>
-            <div class="success-word">${it.word}</div>
+            <a href="${it.url}" target="_blank" class="success-word">${it.word}</a>
             <div class="success-pos">${it.pos || 'Unknown'}</div>
             <div class="success-def">${it.firstDef}</div>
           </div>
@@ -645,7 +650,7 @@
       document.getElementById('run').click();
     };
 
-    // ───────── HELPERS & SCRAPER (unchanged) ─────────
+    // ───────── HELPERS & SCRAPER ─────────
     const proxy = u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     const qs = (s, c = document) => c.querySelector(s);
@@ -654,10 +659,12 @@
     const bullet = '\u2022 ';
     const posMap = { n: 'noun', v: 'verb', adj: 'adjective', adv: 'adverb' };
     const singular = w => w.replace(/ies$/, 'y').replace(/s$/, '');
+
     function parseLine(l) {
       const m = l.match(/^(.*?)(?:\s*\((n|v|adj|adv)\))?$/i);
       return { base: m[1].trim(), hint: m[2]?.toLowerCase() || '' };
     }
+
     function scrape(doc) {
       const head = txt(qs('.webtop-g h2 .hw', doc)
         || qs('.webtop-g h2', doc)
@@ -700,24 +707,24 @@
         phon: txt(qs('span.phon', doc))
       };
     }
+
     async function fetchPage(slug) {
+      const pageUrl = `https://www.oxfordlearnersdictionaries.com/definition/english/${slug}`;
       try {
-        const h = await (await fetch(proxy(
-          `https://www.oxfordlearnersdictionaries.com/definition/english/${slug}`
-        ))).text();
-        return scrape(new DOMParser()
-          .parseFromString(h, 'text/html'));
-      } catch {
-        return null;
-      }
+        const h = await (await fetch(proxy(pageUrl))).text();
+        const data = scrape(new DOMParser().parseFromString(h, 'text/html'));
+        if (data) return { ...data, url: pageUrl };
+      } catch {}
+      return null;
     }
+
     async function fetchSearch(w) {
       try {
-        const url = `https://www.oxfordlearnersdictionaries.com/search/english/?q=${encodeURIComponent(w)}`;
-        const h = await (await fetch(proxy(url))).text();
+        const searchUrl = `https://www.oxfordlearnersdictionaries.com/search/english/?q=${encodeURIComponent(w)}`;
+        const h = await (await fetch(proxy(searchUrl))).text();
         const doc = new DOMParser().parseFromString(h, 'text/html');
-        let r = scrape(doc);
-        if (r) return r;
+        let data = scrape(doc);
+        if (data) return { ...data, url: searchUrl };
         const link = qs('.result-list a', doc)?.href
           || qs('a[href*="/definition/english/"]', doc)?.href;
         if (!link) return null;
@@ -728,6 +735,7 @@
         return null;
       }
     }
+
     async function fetchOxford(w, h) {
       if (h) {
         for (let i = 1; i <= 8; i++) {
@@ -735,8 +743,9 @@
           if (d && d.pos.toLowerCase().startsWith(posMap[h])) return d;
         }
       }
-      return await fetchPage(w) || await fetchSearch(w);
+      return (await fetchPage(w)) || (await fetchSearch(w));
     }
+
     async function lookup(o) {
       let d = await fetchOxford(o.base, o.hint);
       if (d) return { word: d.head || o.base, ...d };
@@ -748,16 +757,18 @@
     }
 
     // ───────── MAIN RUN BUTTON ─────────
-    const runBtn = qs('#run'), bar = qs('#bar'), status = qs('#status');
+    const runBtn = document.getElementById('run'),
+          bar = document.getElementById('bar'),
+          status = document.getElementById('status');
+
     runBtn.onclick = async () => {
-      const lines = qs('#input').value
+      const lines = document.getElementById('input').value
         .split('\n').map(s => s.trim())
         .filter(Boolean).map(parseLine);
       if (!lines.length) return alert('Enter words first');
 
-      // reset fails for this run
       notFoundWords = [];
-      let rows = [], bad = [];
+      let rows = [];
       const delay = Math.max(100, +slider.value);
 
       for (let i = 0; i < lines.length; i++) {
@@ -766,21 +777,26 @@
         const d = await lookup(lines[i]);
 
         if (d.failed) {
-          bad.push(lines[i].base);
+          notFoundWords.push(lines[i].base);
         } else {
           let html = '';
           if (d.extra) html += `<i>${d.extra}</i><br>`;
           html += d.senses.join('<br><br>');
           rows.push(`${d.word}\t${html.replace(/\t/g,' ')}\t${d.pos}\t${d.phon}`);
 
-          // update success list
+          // update success list (now storing url)
           const firstDef = d.senses[0]
             .replace(/<[^>]*>/g, '')
             .replace(/^\d+\.\s*/, '')
             .split('<br>')[0];
           const idx = successfulLookups.findIndex(x => x.word === d.word);
           if (idx >= 0) successfulLookups.splice(idx, 1);
-          successfulLookups.unshift({ word: d.word, pos: d.pos, firstDef });
+          successfulLookups.unshift({
+            word: d.word,
+            pos: d.pos,
+            firstDef,
+            url: d.url
+          });
           if (successfulLookups.length > 50) {
             successfulLookups = successfulLookups.slice(0, 50);
           }
@@ -790,7 +806,7 @@
       }
 
       // record not founds
-      bad.forEach(w => {
+      notFoundWords.forEach(w => {
         if (!notFoundWords.includes(w)) notFoundWords.push(w);
       });
 
